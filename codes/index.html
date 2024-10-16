@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="description"	content="IoT Individual Assignment"/>
+	<title>Dashboard</title>
+</head>
+<style>
+	body{
+		background-color: rgb(175, 227, 211);
+	}
+	table{
+		width:100%;
+	}
+	td{
+		width:50%;
+		height:100%;
+	}
+	svg{
+		width:700px;
+		height:700px;
+	}
+	#settings th{
+		width:10%;
+		text-align: left;
+	}
+	h2{
+		margin:0;
+	}
+	h1, h2, p, label{
+		font-family: sans-serif;
+	}
+	h1{
+		padding-top: 20px;
+	}
+.slider, .slider2 {
+  -webkit-appearance: none;
+  width: 85%;
+  height: 10px;
+  background: #000;
+  outline: none;
+  border-radius: 8px;
+}
+
+
+/* for chrome/safari */
+.slider::-webkit-slider-thumb, .slider2::-webkit-slider-thumb{
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 30px;
+  background: #000;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#slider, #slider2, #sliderVal, #sliderVal2{
+	display:inline-block;
+}
+#button{
+	padding:10px;
+}
+</style>
+<body>
+	<h1>Sentry Dashboard</h1>
+	<table>
+		<tr>
+			<td>
+				<form method="POST" action="{{ url_for('update_settings') }}">
+					<table id="settings">
+						<tr>
+							<th>
+								<label for="sentry_mode">Sentry Mode:</label></br>
+							</th>
+							<td>
+								<select name="sentry_mode">
+									 <option selected disabled value="{{ settings.sentry_mode }}">{% if settings.sentry_mode == 1 %}ON{% else %}OFF{% endif %}</option>
+									 <option value="1">ON</option>
+									 <option value="0">OFF</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<th>
+								<label for="sentry_range">Sentry Range:</label>
+							</th>
+							<td>
+								<input type="range" min="10" max="500" value="{{ settings.sentry_range }}" class="slider" name="sentry_range" id="slider">
+								<p id="sliderVal"><span id="sliderValue">50</span> cm</p>
+							</td>
+						</tr>
+						<tr>
+							<th>
+                <label for="active_time">Active Time:</label>
+							</th>
+							<td>
+								<input type="range" min="10" max="100" value="{{ settings.active_time }}" class="slider2" name="active_time" id="slider2">
+								<p id="sliderVal2"><span id="sliderValue2">50</span> seconds</p>
+							</td>
+						</tr>
+						<tr>
+							<th colspan="2">
+								<input type="submit" value="Update" id="button">
+							</th>
+						</tr>
+					</table>
+				</form>
+			</td>
+			<td>
+				<h2>Direction Distribution</h2>
+				<svg>
+			    <rect id="u" x="200" y="310" width="100" height="0" fill="black" transform="rotate(180 300 300)"/>
+					<rect id="d" x="300" y="410" width="100" height="0" fill="black"/>
+					<rect id="l" x="300" y="310" width="100" height="0" fill="black" transform="rotate(90 300 300)" />
+					<rect id="r" x="200" y="410" width="100" height="0" fill="black" transform="rotate(270 300 300)"/>
+					<text x="300" y="350" font-size="20" fill="black">Shots Fired:</text>
+					<text id="s" x="330" y="370" font-size="20" fill="black" font-family="sans">0</text>
+				</svg>
+			</td>
+		</tr>
+	</table>
+</body>
+<script>
+	const slider = document.getElementById("slider");
+	const output = document.getElementById("sliderValue");
+	output.innerHTML = slider.value;
+	slider.oninput = function() {
+	    output.innerHTML = this.value;
+	};
+	const slider2 = document.getElementById("slider2");
+	const output2 = document.getElementById("sliderValue2");
+	output2.innerHTML = slider2.value;
+	slider2.oninput = function() {
+	    output2.innerHTML = this.value;
+	};
+
+	var data = [{{ actions.U }},{{ actions.D }},{{ actions.L }},{{ actions.R }}];
+	var sh = {{ actions.S }};
+	var max = Math.max(...data);
+
+	const u = document.getElementById("u");
+	const d = document.getElementById("d");
+	const l = document.getElementById("l");
+	const r = document.getElementById("r");
+	const s = document.getElementById("s");
+
+	function map(value, maxValue) {
+    const clampedValue = Math.min(Math.max(value, 0), maxValue);
+    const mappedValue = (clampedValue / maxValue) * 250;
+    return mappedValue;
+	}
+
+	u.setAttribute("height", map(data[0], max));
+	d.setAttribute("height", map(data[1], max));
+	l.setAttribute("height", map(data[2], max));
+	r.setAttribute("height", map(data[3], max));
+	s.textContent = sh;
+</script>
+</html>
